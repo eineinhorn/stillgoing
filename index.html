@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10151f"><meta name="description" content="Keep track of the things you choose to keep going.">
+<link rel="manifest" href="./manifest.json"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>Stillgoing — Streaks</title>
+<style>
+:root{color-scheme:dark;--bg:#10151f;--panel:#192231;--panel2:#202c3e;--text:#f2f5fa;--muted:#9eacc0;--accent:#a9f0cf;--line:#2c3a4e;--danger:#ff9b9b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1d2a3b 0,var(--bg) 55%);color:var(--text);font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:760px;margin:auto;padding:calc(24px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}.brand{font-size:1.45rem;font-weight:800;letter-spacing:-.04em}.brand span{color:var(--accent)}.sub{color:var(--muted);font-size:.9rem;margin-top:4px}
+button,input{font:inherit}button{border:0;border-radius:13px;padding:11px 15px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#102019}.ghost{background:var(--panel2);color:var(--text)}.danger{background:transparent;color:var(--danger);padding:7px 9px}
+h1{font-size:clamp(2rem,7vw,3rem);line-height:1.04;letter-spacing:-.055em;margin:0 0 10px} .intro{color:var(--muted);line-height:1.5;margin:0 0 25px}
+.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:25px 0 12px}.sectionhead h2{font-size:1rem;margin:0}.count{color:var(--muted);font-size:.85rem}
+.cards{display:grid;gap:12px}.card{background:linear-gradient(140deg,var(--panel),#17202d);border:1px solid var(--line);border-radius:20px;padding:17px;box-shadow:0 10px 30px #00000014}
+.cardtop{display:flex;align-items:flex-start;gap:12px}.emoji{width:45px;height:45px;border-radius:14px;background:var(--panel2);display:grid;place-items:center;font-size:1.45rem;flex-shrink:0}.name{font-weight:750;font-size:1.1rem;overflow-wrap:anywhere}.meta{color:var(--muted);font-size:.84rem;margin-top:3px}.days{margin:17px 0 12px;display:flex;align-items:baseline;gap:8px}.days strong{font-size:2.1rem;letter-spacing:-.06em}.days span{color:var(--muted);font-size:.9rem}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.actions button{font-size:.85rem;padding:9px 12px}.progress{height:8px;border-radius:9px;background:#344257;overflow:hidden;margin:12px 0 7px}.bar{height:100%;background:var(--accent);border-radius:9px}.progresslabel{display:flex;justify-content:space-between;color:var(--muted);font-size:.82rem}.empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:20px}.empty b{display:block;color:var(--text);margin-bottom:6px}
+dialog{width:min(520px,calc(100% - 28px));border:1px solid var(--line);border-radius:22px;background:var(--panel);color:var(--text);padding:22px;box-shadow:0 25px 80px #0008}dialog::backdrop{background:#05080dbb;backdrop-filter:blur(4px)}dialog h2{margin:0 0 18px}label{display:block;color:var(--muted);font-size:.86rem;margin:13px 0 7px}input{width:100%;border:1px solid var(--line);background:#101722;color:var(--text);border-radius:12px;padding:12px}input:focus{outline:2px solid var(--accent);border-color:transparent}.fields{display:grid;grid-template-columns:1fr 100px;gap:12px}.modalactions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}.hint{font-size:.82rem;color:var(--muted);line-height:1.4}.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--accent);color:#102019;padding:11px 16px;border-radius:12px;font-weight:700;display:none}
+@media(min-width:600px){main{padding-top:42px}.cards{grid-template-columns:1fr 1fr}.card{min-width:0}.card.full{grid-column:1/-1}}
+</style>
+</head>
+<body><main>
+<header><div><div class="brand">still<span>going</span> ✦</div><div class="sub">A little progress, kept going.</div></div><button class="primary" id="add">＋ New streak</button></header>
+<h1>Keep showing up<br>for <span style="color:var(--accent)">yourself.</span></h1>
+<p class="intro">Start something. Let the days add up. No daily check-ins required — your streak keeps going until you end it.</p>
+<div class="sectionhead"><h2>Your streaks</h2><span class="count" id="count">0 active</span></div>
+<div id="list" class="cards"></div>
+<div class="sectionhead"><h2>Finished</h2><span class="count" id="finishedCount">0</span></div>
+<div id="finished" class="cards"></div>
+<p class="hint" style="margin-top:25px">Your data stays on this device. Consider exporting a backup before clearing browser data.</p>
+</main>
+<dialog id="modal"><form id="form">
+<h2 id="modalTitle">Create a streak</h2>
+<label for="title">What do you want to keep going?</label><input id="title" maxlength="70" placeholder="e.g. Read more" required>
+<div class="fields"><div><label for="emoji">Emoji</label><input id="emoji" maxlength="4" value="✨"></div><div><label for="kind">Type</label><select id="kind" style="width:100%;padding:12px;border-radius:12px;background:#101722;color:white;border:1px solid var(--line)"><option value="ongoing">Ongoing</option><option value="goal">Day goal</option></select></div></div>
+<div id="targetWrap" hidden><label for="target">Goal length (days)</label><input id="target" type="number" min="2" max="36500" value="100"><p class="hint">We’ll show your progress toward this finish line. It won’t end automatically.</p></div>
+<div class="modalactions"><button type="button" class="ghost" id="cancel">Cancel</button><button class="primary" type="submit">Start streak</button></div>
+</form></dialog>
+<div id="toast" class="toast" role="status"></div>
+<script>
+const $=s=>document.querySelector(s), KEY='stillgoing.v1';
+let items=load();
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}}
+function save(){localStorage.setItem(KEY,JSON.stringify(items))}
+function dateKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function daysSince(start){const a=new Date(start+'T12:00:00'),b=new Date(dateKey()+'T12:00:00');return Math.max(1,Math.floor((b-a)/86400000)+1)}
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(t){let el=$('#toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',2100)}
+function render(){
+ const active=items.filter(x=>!x.ended),done=items.filter(x=>x.ended);
+ $('#count').textContent=`${active.length} active`;$('#finishedCount').textContent=done.length;
+ $('#list').innerHTML=active.length?active.map(card).join(''):'<div class="empty" style="grid-column:1/-1"><b>No streaks yet</b>Start with something you care about. Your count begins today. ✨</div>';
+ $('#finished').innerHTML=done.length?done.map(card).join(''):'<div class="empty" style="grid-column:1/-1">Streaks you end will appear here.</div>';
+}
+function card(x){const d=daysSince(x.start),pct=x.kind==='goal'?Math.min(100,d/x.target*100):0;
+return `<article class="card"><div class="cardtop"><div class="emoji">${safe(x.emoji||'✨')}</div><div style="flex:1;min-width:0"><div class="name">${safe(x.title)}</div><div class="meta">${x.ended?'Ended '+safe(x.ended):'Started '+safe(x.start)}</div></div></div>
+<div class="days"><strong>${d}</strong><span>${d===1?'day':'days'} ${x.ended?'completed':'and counting'}</span></div>
+${x.kind==='goal'?`<div class="progress"><div class="bar" style="width:${pct}%"></div></div><div class="progresslabel"><span>${Math.min(d,x.target)} / ${x.target} days</span><span>${Math.round(pct)}%</span></div>`:''}
+<div class="actions" style="margin-top:14px">${!x.ended?`<button class="ghost" onclick="endItem('${x.id}')">End streak</button>`:`<button class="ghost" onclick="restartItem('${x.id}')">Restart</button>`}<button class="danger" onclick="deleteItem('${x.id}')">Delete</button></div></article>`}
+function openModal(){$('#form').reset();$('#emoji').value='✨';$('#target').value=100;$('#targetWrap').hidden=true;$('#modal').showModal()}
+$('#add').onclick=openModal;$('#cancel').onclick=()=>$('#modal').close();
+$('#kind').onchange=()=>$('#targetWrap').hidden=$('#kind').value!=='goal';
+$('#form').onsubmit=e=>{e.preventDefault();const title=$('#title').value.trim();if(!title)return;items.unshift({id:crypto.randomUUID(),title,emoji:$('#emoji').value.trim()||'✨',kind:$('#kind').value,target:Math.max(2,Number($('#target').value)||100),start:dateKey(),ended:null});save();render();$('#modal').close();toast('Your streak has started!')};
+window.endItem=id=>{const x=items.find(i=>i.id===id);if(x&&confirm(`End “${x.title}” now?`)){x.ended=dateKey();save();render();toast('Streak ended')}}; 
+window.deleteItem=id=>{const x=items.find(i=>i.id===id);if(x&&confirm(`Delete “${x.title}” permanently?`)){items=items.filter(i=>i.id!==id);save();render()}};
+window.restartItem=id=>{const x=items.find(i=>i.id===id);if(x){x.start=dateKey();x.ended=null;save();render();toast('Streak restarted')}};
+render();
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script></body></html>
